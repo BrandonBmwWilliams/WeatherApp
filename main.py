@@ -13,7 +13,7 @@ from WeatherApp.infrastructure.openweather.provider import OpenWeatherProvider
 
 
 def build_window() -> WeatherAppWindow:
-    api_key = os.getenv("OPENWEATHER_API_KEY") or "f024f2251a1d67d56a974bf862f8b236"
+    api_key = os.getenv("OPENWEATHER_API_KEY") or "Your api key"
 
     config = OpenWeatherConfig(api_key=api_key)
     client = OpenWeatherClient(config)
