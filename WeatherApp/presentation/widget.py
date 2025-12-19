@@ -6,10 +6,22 @@ from WeatherApp.domain.errors import WeatherError
 
 
 class WeatherAppWindow(QWidget):
+    """
+    Presentation Layer (PyQt Window)
+
+    Responsibilities:
+    - Build UI widgets (labels, input, button)
+    - Handle button click event
+    - Display results or errors
+    """
+
     def __init__(self, controller: WeatherController):
         super().__init__()
+
+        # Dependency injected: UI talks ONLY to controller
         self._controller = controller
 
+        # Create widgets
         self.city_label = QLabel("Enter city name: ", self)
         self.city_input = QLineEdit(self)
         self.get_weather_button = QPushButton("Get Weather", self)
@@ -17,11 +29,16 @@ class WeatherAppWindow(QWidget):
         self.emoji_label = QLabel(self)
         self.description_label = QLabel(self)
 
+        # Build and style UI
         self._init_ui()
 
     def _init_ui(self) -> None:
+        """
+        Creates layout, styles, aligns widgets, and wires button click.
+        """
         self.setWindowTitle("Weather App")
 
+        # Layout manager stacks widgets vertically
         vbox = QVBoxLayout()
         vbox.addWidget(self.city_label)
         vbox.addWidget(self.city_input)
@@ -31,9 +48,11 @@ class WeatherAppWindow(QWidget):
         vbox.addWidget(self.description_label)
         self.setLayout(vbox)
 
+        # Align text in all widgets to center
         for w in (self.city_label, self.city_input, self.temperature_label, self.emoji_label, self.description_label):
             w.setAlignment(Qt.AlignCenter)
 
+        # Object names used by the stylesheet selectors below
         self.city_label.setObjectName("city_label")
         self.city_input.setObjectName("city_input")
         self.get_weather_button.setObjectName("get_weather_button")
@@ -41,6 +60,7 @@ class WeatherAppWindow(QWidget):
         self.emoji_label.setObjectName("emoji_label")
         self.description_label.setObjectName("description_label")
 
+        # UI styling (CSS-like string for Qt)
         self.setStyleSheet("""
             QLabel, QPushButton{ font-family: calibri; }
             QLabel#city_label{ font-size: 40px; font-style: italic; }
@@ -51,22 +71,38 @@ class WeatherAppWindow(QWidget):
             QLabel#description_label{ font-size: 50px }
         """)
 
+        # Connect the button click signal to our handler method
         self.get_weather_button.clicked.connect(self._on_get_weather_clicked)
 
     def _on_get_weather_clicked(self) -> None:
+        """
+        Event handler called when the user clicks 'Get Weather'.
+        """
         try:
+            # Take user input (string) and ask controller for ViewModel
             vm = self._controller.get_weather_for_city(self.city_input.text())
+
+            # Render ViewModel to labels
             self._display_weather(vm)
+
         except WeatherError as ex:
+            # Controller/provider throw WeatherError for "known" issues
+            # We show the message in the UI
             self._display_error(str(ex))
 
     def _display_error(self, message: str) -> None:
+        """
+        Display an error message and clear weather visuals.
+        """
         self.temperature_label.setStyleSheet("font-size: 30px;")
         self.temperature_label.setText(message)
         self.emoji_label.clear()
         self.description_label.clear()
 
     def _display_weather(self, vm: WeatherViewModel) -> None:
+        """
+        Display weather results using the ViewModel.
+        """
         self.temperature_label.setStyleSheet("font-size: 75px;")
         self.temperature_label.setText(vm.temperature_text)
         self.emoji_label.setText(vm.emoji)
